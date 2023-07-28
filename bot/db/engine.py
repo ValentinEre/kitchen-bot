@@ -1,5 +1,6 @@
 from typing import Union
 
+import sqlalchemy
 from sqlalchemy import URL, MetaData
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine as _create_async_engine, AsyncEngine
@@ -19,5 +20,5 @@ async def proceed_schemas(engine: AsyncEngine, metadata: MetaData) -> None:
         conn.run_sync(metadata.create_all)
 
 
-def get_session_maker(engine: AsyncEngine) -> sessionmaker:
-    return sessionmaker(engine=engine, class_=AsyncSession)
+def get_session_maker(engine: sqlalchemy.ext.asyncio.AsyncEngine) -> sessionmaker:
+    return sessionmaker(engine, class_=sqlalchemy.ext.asyncio.AsyncSession, expire_on_commit=False)

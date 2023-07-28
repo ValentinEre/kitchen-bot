@@ -7,8 +7,10 @@ from aiogram.types import BotCommand
 from sqlalchemy import URL
 
 from bot.commands.bot_commands import bot_commands
+from bot.db import create_async_engine
+from bot.db.engine import get_session_maker
+from bot.middleware.register import RegisterCheck
 from commands import register_user_commands
-from bot.db import create_async_engine, proceed_schemas, BaseModel
 
 
 async def main() -> None:
@@ -23,6 +25,7 @@ async def main() -> None:
     bot = Bot(token=token)
     await bot.set_my_commands(commands=commands_for_bot)
 
+    dispatcher.message.middleware.register(RegisterCheck())
     register_user_commands(router=dispatcher)
 
     postgres_url = URL.create(
@@ -34,9 +37,10 @@ async def main() -> None:
         port=os.getenv("DB_PORT")
     )
     async_engine = create_async_engine(postgres_url)
-    await proceed_schemas(async_engine, BaseModel.metadata)
+    session_maker = get_session_maker(async_engine)
+    # await proceed_schemas(async_engine, BaseModel.metadata)
 
-    await dispatcher.start_polling(bot)
+    await dispatcher.start_polling(bot, session_maker=session_maker)
 
 
 if __name__ == "__main__":
