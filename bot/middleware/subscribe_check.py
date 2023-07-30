@@ -3,11 +3,10 @@ from typing import Callable, Dict, Any, Awaitable, Union
 from aiogram import BaseMiddleware, Bot
 from aiogram.types import Message, CallbackQuery
 
-from bot.db.user import is_sub_user
+from bot.db.user import is_sub_user, User
 
 
 class SubscribeCheck(BaseMiddleware):
-    subscribe_result: bool
 
     async def __call__(
             self,
@@ -17,8 +16,9 @@ class SubscribeCheck(BaseMiddleware):
     ) -> Any:
         bot: Bot = data['bot']
         user_id = event.from_user.id
-
         if await is_sub_user(bot=bot, user_id=user_id):
-            self.subscribe_result = True
+            User.is_sub_user = True
         else:
-            self.subscribe_result = False
+            User.is_sub_user = False
+
+        return await handler(event, data)

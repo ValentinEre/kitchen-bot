@@ -1,7 +1,6 @@
 import datetime
 
 from aiogram import Bot
-from aiogram.fsm.context import FSMContext
 from aiogram.types import ChatMemberOwner, ChatMemberAdministrator, ChatMemberMember
 from sqlalchemy import Column, VARCHAR, DATE, select, BIGINT
 from sqlalchemy.orm import sessionmaker
@@ -11,6 +10,8 @@ from .base import BaseModel
 
 class User(BaseModel):
     __tablename__ = "Users"
+
+    is_sub_user: bool = False
 
     # id from telegram
     user_id = Column(BIGINT, primary_key=True, unique=True, nullable=False)
@@ -53,3 +54,6 @@ async def is_sub_user(bot: Bot, user_id):
     if chat_member == ChatMemberOwner or ChatMemberMember or ChatMemberAdministrator:
         return True
     return False
+
+# async def _is_subscriber(variable: bool) -> bool:
+#     return variable
