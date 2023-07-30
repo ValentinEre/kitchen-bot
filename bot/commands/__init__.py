@@ -1,4 +1,4 @@
-__all__ = ['register_user_commands', 'bot_commands', 'StateForm']
+__all__ = ['register_user_commands', 'bot_commands', 'StateForm', 'SubscribeCheck']
 
 from aiogram import Router, F
 from aiogram.filters import Command, CommandStart
@@ -6,6 +6,7 @@ from bot.commands.stateform import StateForm
 from bot.commands.help import help_command
 from bot.commands.recepts import random_recept, recept_with_param, users_product
 from bot.commands.start import start_command
+from bot.middleware.subscribe_check import SubscribeCheck
 
 
 def register_user_commands(router: Router) -> None:

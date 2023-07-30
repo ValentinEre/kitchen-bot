@@ -10,8 +10,11 @@ from natasha import (
     NewsMorphTagger,
     Doc
 )
+from sqlalchemy import select
+from sqlalchemy.orm import sessionmaker
 
 from bot.commands import StateForm
+from bot.db import Ingredient
 
 
 async def random_recept(message: types.Message, state: FSMContext):
@@ -28,9 +31,13 @@ async def recept_with_param(message: types.Message, state: FSMContext):
     await state.set_state(StateForm.GET_PRODUCT)
 
 
-async def users_product(message: types.Message, state: FSMContext):
-    lemma = await my_lemmatization(message.text)
-    result_str = ' '.join(lemma)
+async def users_product(
+        message: types.Message,
+        state: FSMContext,
+        session_maker: sessionmaker
+):
+    # lemma = await my_lemmatization(message.text)
+    # result_str = ' '.join(lemma)
     menu_builder = ReplyKeyboardBuilder()
 
     menu_builder.row(
@@ -42,11 +49,31 @@ async def users_product(message: types.Message, state: FSMContext):
         )
     )
 
+    stmt = await search_in_db(
+        session_maker=session_maker,
+        query='nuts'
+    ),
+
     await message.answer(
-        f'{result_str}',
+        # f'{result_str}',
+        stmt,
         reply_markup=menu_builder.as_markup(resize_keyboard=True)
     )
     await state.set_state(StateForm.GET_BUTTON)
+
+
+async def search_in_db(
+        session_maker: sessionmaker,
+        query: str
+) -> str:
+    async with session_maker() as session:
+        async with session.begin():
+            sql_res = await session.scalars(
+                select(Ingredient.ingredient_name).where(
+                    (Ingredient.ingredient_name == query)
+                )
+            )
+            return sql_res.all()
 
 
 async def my_lemmatization(text):

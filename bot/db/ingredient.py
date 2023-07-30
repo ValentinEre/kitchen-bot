@@ -10,6 +10,5 @@ class Ingredient(BaseModel):
     ingredient_id = Column(INTEGER, primary_key=True, unique=True, nullable=False)
     ingredient_name = Column(VARCHAR(64), unique=False, nullable=False)
 
-
     def __str__(self) -> str:
         return f"<User:{self.recept_id}>"

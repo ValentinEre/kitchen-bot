@@ -1,4 +1,4 @@
-__all__ = ['create_async_engine', 'proceed_schemas', "BaseModel", "User"]
+__all__ = ['create_async_engine', 'proceed_schemas', "BaseModel", "User", "Ingredient"]
 
 from .ingredient import Ingredient
 from .intermediate import Intermediate
