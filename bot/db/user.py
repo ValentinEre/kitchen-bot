@@ -1,5 +1,8 @@
 import datetime
 
+from aiogram import Bot
+from aiogram.fsm.context import FSMContext
+from aiogram.types import ChatMemberOwner, ChatMemberAdministrator, ChatMemberMember
 from sqlalchemy import Column, VARCHAR, DATE, select, BIGINT
 from sqlalchemy.orm import sessionmaker
 
@@ -33,7 +36,7 @@ async def create_user(
         user_id: int,
         username: str,
         session_maker: sessionmaker
-        ) -> None:
+) -> None:
     async with session_maker() as session:
         async with session.begin():
             user = User(
@@ -41,3 +44,12 @@ async def create_user(
                 user_name=username,
             )
             session.add(user)
+
+
+async def is_sub_user(bot: Bot, user_id):
+    chat_id = '-1001915744049'
+
+    chat_member = await bot.get_chat_member(chat_id=chat_id, user_id=user_id)
+    if chat_member == ChatMemberOwner or ChatMemberMember or ChatMemberAdministrator:
+        return True
+    return False
