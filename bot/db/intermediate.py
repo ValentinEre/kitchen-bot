@@ -11,6 +11,7 @@ class Intermediate(BaseModel):
     recept_id = Column(INTEGER, unique=False, nullable=False)
     ingredient_id = Column(INTEGER, unique=False, nullable=False)
     unit_id = Column(INTEGER, unique=False, nullable=False)
+    amount = Column(INTEGER, unique=False, nullable=False)
 
     def __str__(self) -> str:
         return f"<User:{self.recept_id}>"
