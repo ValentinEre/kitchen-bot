@@ -36,9 +36,6 @@ async def users_product(
         state: FSMContext,
         session_maker: sessionmaker
 ):
-    # lemma = await my_lemmatization(message.text)
-    # result_str = ' '.join(lemma)
-
     menu_builder = ReplyKeyboardBuilder()
 
     menu_builder.row(
@@ -53,8 +50,7 @@ async def users_product(
     list_ingredients = convert_in_list(message.text)
     list_ingredients_id = []
     list_recept_id = []
-    # TODO lemma
-    # TODO tolowercase
+
     # response_ingredient_id = await search_ingredient_id(
     #     session_maker=session_maker,
     #     list_ingredient_name=list_ingredients
@@ -78,8 +74,8 @@ async def users_product(
         recept_id=list_recept_id[0]
     )
 
-    for recept in response_full_recept:
-        print(f'\n\n\n{recept}\n\n\n\n')
+    get_recept_for_user(response_full_recept)
+    print(get_recept_for_user(response_full_recept))
 
 
 # await message.answer(
@@ -97,6 +93,33 @@ def convert_in_list(text: str):
         ingredient_list.append(ingredient.strip())
 
     return ingredient_list
+
+
+def get_recept_for_user(response_full_recept):
+    recept_name = ""
+    ingredients_with_amount = []
+    for row in response_full_recept:
+        recept_name = f"{row[0]}\n"
+        ingredients_with_amount.append(f"{row[1]} - {row[2]} {row[3]}\n")
+    recept = recept_name + ''.join(ingredients_with_amount)
+    return recept
+
+
+def my_lemmatization(text):
+    doc = Doc(text=text)
+    emb = NewsEmbedding()
+    morph_tagger = NewsMorphTagger(emb)
+    segment = Segmenter()
+    morph_vocab = MorphVocab()
+
+    doc.segment(segment)
+    doc.tag_morph(morph_tagger)
+    token_list = []
+    for token in doc.tokens:
+        token.lemmatize(morph_vocab)
+    for token in doc.tokens:
+        token_list.append(token.lemma)
+    return token_list
 
 
 async def search_ingredient_id(
@@ -157,6 +180,7 @@ async def search_full_recept(
 
             stmt = select(
                 r.c.recept_name,
+                r.c.preparation,
                 i2.c.ingredient_name,
                 i.c.amount,
                 u.c.unit_name
@@ -175,20 +199,3 @@ async def search_full_recept(
             # Execute the query
             result = await session.execute(stmt)
         return result.fetchall()
-
-
-def my_lemmatization(text):
-    doc = Doc(text=text)
-    emb = NewsEmbedding()
-    morph_tagger = NewsMorphTagger(emb)
-    segment = Segmenter()
-    morph_vocab = MorphVocab()
-
-    doc.segment(segment)
-    doc.tag_morph(morph_tagger)
-    token_list = []
-    for token in doc.tokens:
-        token.lemmatize(morph_vocab)
-    for token in doc.tokens:
-        token_list.append(token.lemma)
-    return token_list
