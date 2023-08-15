@@ -1,42 +1,20 @@
-import random
-from itertools import islice
+from typing import Any
 
 import requests
 from bs4 import BeautifulSoup
-from duckduckgo_search import DDGS
+from sqlalchemy import select
+from sqlalchemy.orm import sessionmaker, aliased
+
+from bot.db import Ingredient, Units, Recept, Intermediate
 
 url_list = []
 
-site_for_search = 'nyamkin.ru'
 
-with DDGS() as ddgs:
-    ddgs_gen = ddgs.text(f"рецепты состоящие только из +помидоров site:{site_for_search}", backend="lite")
-    for r in islice(ddgs_gen, 15):
-        url_list.append(r.get('href'))
-
-
-def qwe(list_url):
-    list_ = []
-    current_url = random.choice(list_url)
-    response = requests.get(current_url)
-    if response.status_code == 200:
-        soup = BeautifulSoup(response.content, 'html.parser')
-        links = soup.findAll('a')
-
-        for link in links:
-            li = link.get('href')
-
-            if li is not None and li.startswith('/recipes'):
-                full_link = f'https://{site_for_search}{li}'
-                list_.append(full_link)
-    else:
-        print(response.status_code)
-    return list_
-
-
-def get_link(links_with_recept):
-    link_with_recept = random.choice(links_with_recept)
-    response = requests.get(link_with_recept)
+async def get_recept(
+        link,
+        session_maker: sessionmaker
+):
+    response = requests.get(link)
     if response.status_code == 200:
         soup = BeautifulSoup(response.content, 'html.parser')
 
@@ -46,7 +24,7 @@ def get_link(links_with_recept):
         for ingredient_element in ingredient_elements:
             ingredient_name_element = ingredient_element.find('span', itemprop='recipeIngredient')
             ingredient_amount_element = ingredient_element.find('span', class_='ingr-quantity')
-            ingredient_unit_element = ingredient_element.find('span', class_='mera')
+            ingredient_unit_element = ingredient_element.find('div', class_="col-sm-4 col-xs-3 mera")
 
             if ingredient_name_element is not None:
                 ingredient_name = ingredient_name_element.text.strip()
@@ -59,7 +37,7 @@ def get_link(links_with_recept):
                 ingredient_amount = ''
 
             if ingredient_unit_element is not None:
-                ingredient_unit = ingredient_unit_element.text.strip()
+                ingredient_unit = ingredient_unit_element.contents[3].text.strip()
             else:
                 ingredient_unit = ''
 
@@ -71,14 +49,159 @@ def get_link(links_with_recept):
             step = step_element.get_text().strip()
             preparation_steps.append(step)
 
-        # Print the extracted data
-        print('Recipe Title:', title)
-        print('Ingredients with Amounts:')
-        for ingredient, amount, unit in ingredients_with_amounts:
-            print('-', amount, unit, ingredient)
-        print('Preparation Steps:')
-        for index, step in enumerate(preparation_steps, start=1):
-            print(f'{index}. {step}')
+        # recipe_info = f"Рецепт: {title}\nИнгредиенты:"
+        # for ingredient, amount, unit in ingredients_with_amounts:
+        #     recipe_info += f"\n- {amount} {unit} {ingredient}"
+        # recipe_info += "\nПриготовление:"
+        # for index, step in enumerate(preparation_steps, start=1):
+        #     recipe_info += f"\n{index}. {step}"
+
+        await add_title(
+            session_maker=session_maker,
+            title=title,
+            preparation_steps=preparation_steps
+        )
+
+        await add_ingredients_and_units(
+            ingredients_with_amounts=ingredients_with_amounts,
+            session_maker=session_maker
+        )
+        id_and_amount = await get_id_and_amount(
+            title=title,
+            ingredients_with_amounts=ingredients_with_amounts,
+            session_maker=session_maker
+        )
+
+        await qwe(
+            id_and_amount=id_and_amount,
+            session_maker=session_maker
+        )
 
 
-get_link(qwe(url_list))
+async def add_title(
+        session_maker: sessionmaker,
+        title,
+        preparation_steps
+):
+    preparation = ''
+    for index, step in enumerate(preparation_steps, start=1):
+        preparation += f"\n{index}. {step}"
+    async with session_maker() as session:
+        async with session.begin():
+            recept = Recept(recept_name=title, preparation=preparation)
+
+            session.add(recept)
+            await session.commit()
+
+
+async def add_ingredients_and_units(
+        session_maker: sessionmaker,
+        ingredients_with_amounts
+):
+    for ingredient, amount, unit in ingredients_with_amounts:
+        async with session_maker() as session:
+            async with session.begin():
+                existing_ingredient = await check_ingredient(session_maker=session_maker, ingredient=ingredient)
+                existing_unit = await check_unit(session_maker=session_maker, unit=unit)
+
+                if not existing_ingredient:
+                    ing = Ingredient(ingredient_name=ingredient)
+                    session.add(ing)
+
+                if not existing_unit:
+                    un = Units(unit_name=unit)
+                    session.add(un)
+                await session.commit()
+
+
+async def check_ingredient(
+        session_maker: sessionmaker,
+        ingredient
+):
+    async with session_maker() as session:
+        async with session.begin():
+            ingredients_table = Ingredient.__table__
+
+            i = aliased(ingredients_table)
+            stmt_select_ing = select(i).where(i.c.ingredient_name == ingredient)
+            result = await session.execute(stmt_select_ing)
+            existing_ing = result.scalar_one_or_none()
+            return existing_ing is not None
+
+
+async def check_unit(
+        session_maker: sessionmaker,
+        unit
+):
+    async with session_maker() as session:
+        async with session.begin():
+            units_table = Units.__table__
+            u = aliased(units_table)
+            stmt_select_unit = select(u).where(u.c.unit_name == unit)
+            result = await session.execute(stmt_select_unit)
+            existing_unit = result.scalar_one_or_none()
+            return existing_unit is not None
+
+
+async def get_id_and_amount(
+        title,
+        ingredients_with_amounts,
+        session_maker: sessionmaker,
+) -> list[tuple[Any, Any, Any, Any]]:
+    list_id_and_amount = []
+    receipts_table = Recept.__table__
+    units_table = Units.__table__
+    ingredients_table = Ingredient.__table__
+    r = aliased(receipts_table)
+    u = aliased(units_table)
+    i = aliased(ingredients_table)
+
+    async with session_maker() as session:
+        async with session.begin():
+            for ingredient, amount, unit in ingredients_with_amounts:
+                stmt_t = select(r.c.recept_id).where(r.c.recept_name == title)
+                stmt_i = select(i.c.ingredient_id).where(i.c.ingredient_name == ingredient)
+                stmt_u = select(u.c.unit_id).where(u.c.unit_name == unit)
+                result_t = await session.execute(stmt_t)
+                result_i = await session.execute(stmt_i)
+                result_u = await session.execute(stmt_u)
+                recept_id = result_t.scalar_one_or_none()
+                ingredient_id = result_i.scalar_one_or_none()
+                unit_id = result_u.scalar_one_or_none()
+                list_id_and_amount.append((recept_id, ingredient_id, amount, unit_id))
+    return list_id_and_amount
+
+
+async def qwe(
+        id_and_amount,
+        session_maker
+):
+    for recept_id, ingredient_id, amount, unit_id in id_and_amount:
+        if amount == '':
+            amount = 0
+        await add_intermediate(
+            session_maker=session_maker,
+            recept_id=recept_id,
+            ingredient_id=ingredient_id,
+            amount=float(amount),
+            unit_id=unit_id
+        )
+
+
+async def add_intermediate(
+        session_maker: sessionmaker,
+        recept_id,
+        ingredient_id,
+        amount,
+        unit_id,
+):
+    async with session_maker() as session:
+        async with session.begin():
+            intermediate = Intermediate(
+                recept_id=recept_id,
+                ingredient_id=ingredient_id,
+                amount=amount,
+                unit_id=unit_id
+            )
+            session.add(intermediate)
+        await session.commit()
