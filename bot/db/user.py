@@ -45,6 +45,7 @@ async def create_user(
                 user_name=username,
             )
             session.add(user)
+            await session.commit()
 
 
 async def is_sub_user(bot: Bot, user_id):
@@ -54,6 +55,3 @@ async def is_sub_user(bot: Bot, user_id):
     if chat_member == ChatMemberOwner or ChatMemberMember or ChatMemberAdministrator:
         return True
     return False
-
-# async def _is_subscriber(variable: bool) -> bool:
-#     return variable
