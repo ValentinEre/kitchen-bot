@@ -14,9 +14,6 @@ async def start_command(message: types.Message, state: FSMContext):
         keyboard_markup = ReplyKeyboardBuilder()
         keyboard_markup.row(
             KeyboardButton(
-                text='Случайный рецепт'
-            ),
-            KeyboardButton(
                 text='Рецепт из имеющегося'
             )
         )

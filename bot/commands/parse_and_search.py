@@ -10,6 +10,27 @@ from bot.db import Ingredient, Units, Recept, Intermediate
 url_list = []
 
 
+def asd(page_link):
+    site_for_search = 'nyamkin.ru'
+    list_ = []
+    response = requests.get(page_link)
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.content, 'html.parser')
+        links = soup.findAll('a')
+
+        for link in links:
+            li = link.get('href')
+
+            if li is not None and li.startswith('/recipes'):
+                full_link = f'https://{site_for_search}{li}'
+                if full_link not in list_:
+                    list_.append(full_link)
+
+    else:
+        print(response.status_code)
+    return list_
+
+
 async def get_recept(
         link,
         session_maker: sessionmaker
