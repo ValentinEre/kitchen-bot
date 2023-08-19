@@ -19,7 +19,7 @@ async def main() -> None:
     for cmd in bot_commands:
         commands_for_bot.append(BotCommand(command=cmd[0], description=cmd[1]))
 
-    logging.basicConfig(level=logging.DEBUG)
+    # logging.basicConfig(level=logging.DEBUG)
     token = os.getenv("TELEGRAM_API_KITCHEN")
 
     dispatcher = Dispatcher()

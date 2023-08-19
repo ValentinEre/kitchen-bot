@@ -1,37 +1,28 @@
-import random
-
 from aiogram import types
 from aiogram.fsm.context import FSMContext
 from aiogram.types import KeyboardButton
-from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
+from aiogram.utils.keyboard import ReplyKeyboardBuilder
 from natasha import MorphVocab, Segmenter, NewsMorphTagger, NewsEmbedding, Doc
-from sqlalchemy import select, join, func
+from sqlalchemy import select, join, desc, func, asc
 from sqlalchemy.orm import sessionmaker, aliased
 
 from bot.commands import StateForm
+from bot.commands.differ import get_cool_id
+from bot.commands.functions import show_unsub_text
 from bot.db import Units, Ingredient, Intermediate, Recept, User
 
 another_using = 'Если Вы хотите использовать бота - выберите кнопку.'
 
 
 async def recept_with_param(message: types.Message, state: FSMContext):
-    chat_link = 'https://t.me/+lar9adBYtUg0N2Zi'
-    chat_name = 'Кулинарная Академия: Рецепты и Лайфхаки'
-    message_for_unsub_user = 'Чтобы пользаваться этим замечательным ботом, пожалуйста подпишитесь на канал'
     if User.is_sub_user:
         await message.answer(
             'Напишите названия продуктов, которые у Вас есть.\nЧерез запятую.'
         )
         await state.set_state(StateForm.GET_PRODUCT)
     else:
-        keyboard_markup = InlineKeyboardBuilder()
-        keyboard_markup.button(
-            text=chat_name,
-            url=chat_link
-        )
-        await message.answer(
-            message_for_unsub_user,
-            reply_markup=keyboard_markup.as_markup(resize_keyboard=True)
+        await show_unsub_text(
+            message=message
         )
 
 
@@ -40,9 +31,6 @@ async def users_product(
         state: FSMContext,
         session_maker: sessionmaker
 ):
-    chat_link = 'https://t.me/+lar9adBYtUg0N2Zi'
-    chat_name = 'Кулинарная Академия: Рецепты и Лайфхаки'
-    message_for_unsub_user = 'Чтобы пользаваться этим замечательным ботом, пожалуйста подпишитесь на канал'
     if User.is_sub_user:
         not_founded_ing = 'Пока что в базе отсутствует ингредиент, который Вы написали.'
         not_founded_rec = 'Пока что в базе отсутствует рецепт, состоящий Ваших из ингредиентов.'
@@ -55,66 +43,83 @@ async def users_product(
             )
         )
         list_ingredients = convert_in_list(message.text)
-        list_ingredients_id = []
         list_recept_id = []
 
         response_ingredient_id = await search_ingredient_id(
             session_maker=session_maker,
             list_ingredient_name=list_ingredients
         )
-        for ingredient_id in response_ingredient_id:
-            list_ingredients_id.append(ingredient_id)
 
-        if list_ingredients_id:
-            response_recept_id = await search_recept_id(
+        if response_ingredient_id:
+            response_recept_id = await get_intermediate_id(
                 session_maker=session_maker,
-                list_ingredient_id=list_ingredients_id
+                list_ingredient_id=response_ingredient_id
             )
+
             for recept_id in response_recept_id:
                 for r_id in recept_id:
-                    list_recept_id.append(r_id)
+                    list_recept_id.append(int(r_id))
 
-            if list_recept_id:
-                response_full_recept = await search_full_recept(
+            if response_recept_id:
+                first_col = await get_recept_inter_id(
                     session_maker=session_maker,
-                    recept_id=random.choice(list_recept_id)
+                    list_intermediate_recept_id=list_recept_id
+                )
+
+                first = convert_in_int(list_=first_col)
+
+                second_col = await get_another_recept_id(
+                    session_maker=session_maker,
+                    first_col=first,
+                    list_ingredient_id=list_recept_id
+                )
+
+                second = convert_in_int(list_=second_col)
+
+                cool_id = get_cool_id(
+                    first=first,
+                    second=second
+                )
+
+                recept = await search_full_recept(
+                    session_maker=session_maker,
+                    recept_id=cool_id
                 )
 
                 await message.answer(
-                    get_recept_for_user(response_full_recept)
+                    get_recept_for_user(recept)
                 )
                 await message.answer(
                     another_using,
                     reply_markup=menu_builder.as_markup(resize_keyboard=True)
                 )
                 await state.set_state(StateForm.GET_BUTTON)
-            elif not list_recept_id:
+            elif not response_recept_id:
                 await message.answer(
                     not_founded_rec,
                     reply_markup=menu_builder.as_markup(resize_keyboard=True)
                 )
                 await state.set_state(StateForm.GET_PRODUCT)
-        elif not list_ingredients_id:
+        elif not response_ingredient_id:
             await message.answer(
                 not_founded_ing,
                 reply_markup=menu_builder.as_markup(resize_keyboard=True)
             )
             await state.set_state(StateForm.GET_PRODUCT)
     else:
-        keyboard_markup = InlineKeyboardBuilder()
-        keyboard_markup.button(
-            text=chat_name,
-            url=chat_link
-        )
-        await message.answer(
-            message_for_unsub_user,
-            reply_markup=keyboard_markup.as_markup(resize_keyboard=True)
+        await show_unsub_text(
+            message=message
         )
 
     # for page in range(300):
     #     for link in asd(page_link=f'{message.text}{page+1}'):
     #         await get_recept(link=link, session_maker=session_maker)
     #         print(f'str #{page+1}')
+
+
+def convert_in_int(list_):
+    my_list = [int(row[0]) for row in list_]
+    return my_list
 
 
 def convert_in_list(text: str):
@@ -175,25 +180,57 @@ async def search_ingredient_id(
             return list_ingredient_id
 
 
-async def search_recept_id(session_maker: sessionmaker, list_ingredient_id):
+async def get_intermediate_id(session_maker: sessionmaker, list_ingredient_id):
     async with session_maker() as session:
         async with session.begin():
-            recepts_table = Recept.__table__
-            recepts = aliased(recepts_table, name='r')
             intermediates_table = Intermediate.__table__
             intermediates = aliased(intermediates_table, name='i')
 
-            stmt = select(recepts.c.recept_id). \
-                select_from(
-                join(recepts, intermediates,
-                     recepts.c.recept_id == intermediates.c.recept_id)). \
-                where(intermediates.c.ingredient_id.in_(list_ingredient_id)). \
-                group_by(recepts.c.recept_id, recepts.c.recept_name). \
-                having(
-                func.count(intermediates.c.ingredient_id.distinct()) == len(list_ingredient_id) - 1,
-                func.count(intermediates.c.ingredient_id.distinct()) ==
-                func.count('*')
-            )
+            stmt = select(intermediates.c.id) \
+                .where(intermediates.c.ingredient_id.in_(list_ingredient_id))
+
+            result = await session.execute(stmt)
+            return result.fetchall()
+
+
+async def get_recept_inter_id(session_maker: sessionmaker, list_intermediate_recept_id):
+    async with session_maker() as session:
+        async with session.begin():
+            intermediates_table = Intermediate.__table__
+            intermediates = aliased(intermediates_table, name='i')
+
+            stmt = select(intermediates.c.recept_id) \
+                .where(intermediates.c.ingredient_id.in_(list_intermediate_recept_id)) \
+                .group_by(intermediates.c.recept_id) \
+                .order_by(desc(func.count()))
+
+            first_col = await session.execute(stmt)
+            return first_col.fetchall()
+
+
+async def get_another_recept_id(session_maker: sessionmaker, first_col, list_ingredient_id):
+    async with session_maker() as session:
+        async with session.begin():
+            intermediates_table = Intermediate.__table__
+            intermediates = aliased(intermediates_table, name='i')
+
+            stmt = select(intermediates.c.recept_id) \
+                .where(intermediates.c.recept_id.in_(first_col)) \
+                .where(intermediates.c.ingredient_id.in_(list_ingredient_id)) \
+                .group_by(intermediates.c.recept_id) \
+                .order_by(asc(func.count()))
+            second_col = await session.execute(stmt)
+            return second_col.fetchall()
+
+
+async def search_recept_id(session_maker: sessionmaker, list_ingredient_id):
+    async with session_maker() as session:
+        async with session.begin():
+            intermediates_table = Intermediate.__table__
+            intermediates = aliased(intermediates_table, name='i')
+
+            stmt = select(intermediates.c.recept_id).where(intermediates.c.ingredient_id.in_(list_ingredient_id)) \
+                .group_by(intermediates.c.recept_id)
 
             result = await session.execute(stmt)
             return result.fetchall()
