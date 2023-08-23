@@ -1,13 +1,16 @@
+import random
+
 from aiogram import types
 from aiogram.fsm.context import FSMContext
 from aiogram.types import KeyboardButton
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 from natasha import MorphVocab, Segmenter, NewsMorphTagger, NewsEmbedding, Doc
 from sqlalchemy import select, join, desc, func, asc
+from sqlalchemy.exc import MultipleResultsFound
 from sqlalchemy.orm import sessionmaker, aliased
 
 from bot.commands import StateForm
-from bot.commands.differ import get_cool_id
+from bot.commands.differ import get_cool_id, same_len_list
 from bot.commands.functions import show_unsub_text
 from bot.db import Units, Ingredient, Intermediate, Recept, User
 
@@ -43,27 +46,26 @@ async def users_product(
             )
         )
         list_ingredients = convert_in_list(message.text)
-        list_recept_id = []
 
-        response_ingredient_id = await search_ingredient_id(
+        response_ingredient_id = await get_ingredient_id(
             session_maker=session_maker,
             list_ingredient_name=list_ingredients
         )
 
         if response_ingredient_id:
-            response_recept_id = await get_intermediate_id(
-                session_maker=session_maker,
-                list_ingredient_id=response_ingredient_id
-            )
+            list_ing_id = convert_in_int(list_=response_ingredient_id)
 
-            for recept_id in response_recept_id:
-                for r_id in recept_id:
-                    list_recept_id.append(int(r_id))
+            print(f'\n\n\n{list_ing_id}\n\n\n')
+
+            response_recept_id = await get_intermediate_recept_id(
+                session_maker=session_maker,
+                list_ingredient_id=list_ing_id
+            )
 
             if response_recept_id:
                 first_col = await get_recept_inter_id(
                     session_maker=session_maker,
-                    list_intermediate_recept_id=list_recept_id
+                    list_ingredient_id=list_ing_id
                 )
 
                 first = convert_in_int(list_=first_col)
@@ -71,14 +73,19 @@ async def users_product(
                 second_col = await get_another_recept_id(
                     session_maker=session_maker,
                     first_col=first,
-                    list_ingredient_id=list_recept_id
+                    list_ingredient_id=list_ing_id
                 )
 
                 second = convert_in_int(list_=second_col)
 
-                cool_id = get_cool_id(
+                second_same = same_len_list(
                     first=first,
                     second=second
+                )
+
+                cool_id = get_cool_id(
+                    first=first,
+                    second=second_same
                 )
 
                 recept = await search_full_recept(
@@ -118,7 +125,12 @@ async def users_product(
 
 
 def convert_in_int(list_):
-    my_list = [int(row[0]) for row in list_]
+    my_list = []
+    for row in list_:
+        if type(row) is not int:
+            my_list.append(int(row[0]))
+        else:
+            my_list.append(row)
     return my_list
 
 
@@ -160,7 +172,7 @@ def my_lemma(text):
     return token_list
 
 
-async def search_ingredient_id(
+async def get_ingredient_id(
         session_maker: sessionmaker,
         list_ingredient_name
 ):
@@ -171,39 +183,49 @@ async def search_ingredient_id(
 
             i = aliased(ingredients_table)
             for ingredient_name in list_ingredient_name:
-                stmt = select(i.c.ingredient_id).where(i.c.ingredient_name.like(ingredient_name))
+                stmt = select(i.c.ingredient_id).where(i.c.ingredient_name.contains(ingredient_name))
                 result = await session.execute(stmt)
-                ingredient = result.scalar_one_or_none()
-                if ingredient:
-                    list_ingredient_id.append(ingredient)
-
+                try:
+                    ingredient = result.scalar_one_or_none()
+                    if ingredient:
+                        list_ingredient_id.append(ingredient)
+                except MultipleResultsFound:
+                    random_result = await session.execute(stmt)
+                    random_ingredient = random_result.fetchall()
+                    random_ingredient = random.choice(random_ingredient)
+                    list_ingredient_id.append(random_ingredient)
             return list_ingredient_id
 
 
-async def get_intermediate_id(session_maker: sessionmaker, list_ingredient_id):
-    async with session_maker() as session:
-        async with session.begin():
-            intermediates_table = Intermediate.__table__
-            intermediates = aliased(intermediates_table, name='i')
-
-            stmt = select(intermediates.c.id) \
-                .where(intermediates.c.ingredient_id.in_(list_ingredient_id))
-
-            result = await session.execute(stmt)
-            return result.fetchall()
-
-
-async def get_recept_inter_id(session_maker: sessionmaker, list_intermediate_recept_id):
+async def get_intermediate_recept_id(session_maker: sessionmaker, list_ingredient_id):
     async with session_maker() as session:
         async with session.begin():
             intermediates_table = Intermediate.__table__
             intermediates = aliased(intermediates_table, name='i')
 
             stmt = select(intermediates.c.recept_id) \
-                .where(intermediates.c.ingredient_id.in_(list_intermediate_recept_id)) \
-                .group_by(intermediates.c.recept_id) \
-                .order_by(desc(func.count()))
+                .where(intermediates.c.ingredient_id.in_(list_ingredient_id))
 
+            result = await session.execute(stmt)
+            return result.fetchall()
+
+
+async def get_recept_inter_id(session_maker: sessionmaker, list_ingredient_id):
+    async with session_maker() as session:
+        async with session.begin():
+            intermediates_table = Intermediate.__table__
+            intermediates = aliased(intermediates_table, name='i')
+
+            st = select(intermediates.c.recept_id) \
+                .where(intermediates.c.ingredient_id.in_(list_ingredient_id)).subquery()
+
+            stmt = select(st) \
+                .group_by(st.c.recept_id) \
+                .order_by(
+                desc(
+                    func.count()
+                )
+            )
             first_col = await session.execute(stmt)
             return first_col.fetchall()
 
@@ -214,11 +236,19 @@ async def get_another_recept_id(session_maker: sessionmaker, first_col, list_ing
             intermediates_table = Intermediate.__table__
             intermediates = aliased(intermediates_table, name='i')
 
-            stmt = select(intermediates.c.recept_id) \
-                .where(intermediates.c.recept_id.in_(first_col)) \
-                .where(intermediates.c.ingredient_id.in_(list_ingredient_id)) \
-                .group_by(intermediates.c.recept_id) \
-                .order_by(asc(func.count()))
+            st = select(intermediates.c.recept_id) \
+                .where(intermediates.c.ingredient_id.notin_(list_ingredient_id)).subquery()
+
+            mt = select(st.c.recept_id) \
+                .where(st.c.recept_id.in_(first_col)).subquery()
+
+            stmt = select(mt) \
+                .group_by(mt.c.recept_id) \
+                .order_by(
+                asc(
+                    func.count()
+                )
+            )
             second_col = await session.execute(stmt)
             return second_col.fetchall()
 
