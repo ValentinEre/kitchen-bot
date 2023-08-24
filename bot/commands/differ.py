@@ -11,14 +11,8 @@ def same_len_list(
 
 
 def get_cool_id(first, second):
-    list_diff = []
-    if len(first) == len(second):
+    inverse_index = {element: index for index, element in enumerate(first)}
+    my_list = [inverse_index[element]
+               for index, element in enumerate(second) if element in inverse_index]
+    return first[my_list.index(min(my_list))]
 
-        for num in first:
-            index_in_first = first.index(num)
-            index_in_second = second.index(num)
-            difference = abs(index_in_first - index_in_second)
-            list_diff.append(difference)
-        print(list_diff)
-
-    return first[list_diff.index(min(list_diff))]
