@@ -1,7 +1,6 @@
 import datetime
 
 from aiogram import Bot
-from aiogram.types import ChatMemberOwner, ChatMemberAdministrator, ChatMemberMember
 from sqlalchemy import Column, VARCHAR, DATE, select, BIGINT
 from sqlalchemy.orm import sessionmaker
 
@@ -50,8 +49,11 @@ async def create_user(
 
 async def is_sub_user(bot: Bot, user_id):
     chat_id = '-1001915744049'
+    good_status = ["creator", "administrator", "member"]
+    bad_status = ["left", "kicked"]
 
     chat_member = await bot.get_chat_member(chat_id=chat_id, user_id=user_id)
-    if chat_member == ChatMemberOwner or ChatMemberMember or ChatMemberAdministrator:
+    if chat_member.status in good_status:
         return True
-    return False
+    elif chat_member.status in bad_status:
+        return False
