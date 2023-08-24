@@ -1,4 +1,4 @@
-from sqlalchemy import Column, INTEGER
+from sqlalchemy import Column, INTEGER, DOUBLE
 
 from .base import BaseModel
 
@@ -11,7 +11,7 @@ class Intermediate(BaseModel):
     recept_id = Column(INTEGER, unique=False, nullable=False)
     ingredient_id = Column(INTEGER, unique=False, nullable=False)
     unit_id = Column(INTEGER, unique=False, nullable=False)
-    amount = Column(INTEGER, unique=False, nullable=False)
+    amount = Column(DOUBLE, unique=False, nullable=False)
 
     def __str__(self) -> str:
         return f"<User:{self.recept_id}>"
