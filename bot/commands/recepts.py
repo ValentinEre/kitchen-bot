@@ -43,7 +43,6 @@ async def users_product(
         state: FSMContext,
         session_maker: sessionmaker
 ):
-    # todo lem, tolowercase, missclics
     if User.is_sub_user:
         not_founded_ing = 'Пока что в базе отсутствует ингредиент, который Вы написали.'
         not_founded_rec = 'Пока что в базе отсутствует рецепт, состоящий Ваших из ингредиентов.'
@@ -143,9 +142,9 @@ def convert_in_list(text: str):
     data = text.split(",")
     ingredient_list = []
     for ingredient in data:
-        ingredient_list.append(ingredient.strip())
+        ingredient_list.append(ingredient.lower().strip())
 
-    return ingredient_list
+    return my_lemma(ingredient_list)
 
 
 def get_recept_for_user(response_full_recept):
@@ -160,7 +159,8 @@ def get_recept_for_user(response_full_recept):
     return recept
 
 
-def my_lemma(text):
+def my_lemma(my_list):
+    text = ' '.join(my_list)
     doc = Doc(text=text)
     emb = NewsEmbedding()
     morph_tagger = NewsMorphTagger(emb)

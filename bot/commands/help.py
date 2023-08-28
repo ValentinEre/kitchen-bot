@@ -1,9 +1,8 @@
 from aiogram import types
 from aiogram.filters import CommandObject
-from aiogram.types import KeyboardButton
-from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from bot.commands import bot_commands, StateForm
+from bot.commands.bot_commands import bot_commands
 from bot.db import User
 
 
@@ -21,7 +20,7 @@ async def help_command(message: types.Message, command: CommandObject):
             else:
                 return await message.answer('Command not found')
         return await message.answer(
-            'Help with the bot'
+            'Данный бот поможет Вам приготовить вкусное блюдо на основе имеющихся ингредиентов.'
         )
     else:
         keyboard_markup = InlineKeyboardBuilder()

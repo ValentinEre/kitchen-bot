@@ -1,4 +1,4 @@
 bot_commands = (
-    ("start", "Start the bot", "Start work with the bot"),
-    ("help", "Info", "Help with bot")
+    ("start", "Start the bot", "Начало работы с прекраным ботом."),
+    ("help", "Info", "Подсказки по использованию бота.")
 )

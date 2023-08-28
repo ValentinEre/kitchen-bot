@@ -1,45 +1,54 @@
 from collections import deque
-from typing import TYPE_CHECKING, AsyncGenerator, Deque, Optional, Type
+from typing import TYPE_CHECKING, Any, AsyncGenerator, Deque, Dict, Optional, Type
 
 from aiogram import Bot
 from aiogram.client.session.base import BaseSession
 from aiogram.methods import TelegramMethod
-from aiogram.methods.base import Request, Response, TelegramType
-from aiogram.types import ResponseParameters, User
-from aiogram.types.base import UNSET
+from aiogram.methods.base import Response, TelegramType
+from aiogram.types import UNSET_PARSE_MODE, ResponseParameters, User
 
 
 class MockedSession(BaseSession):
     def __init__(self):
         super(MockedSession, self).__init__()
         self.responses: Deque[Response[TelegramType]] = deque()
-        self.requests: Deque[Request] = deque()
+        self.requests: Deque[TelegramMethod[TelegramType]] = deque()
         self.closed = True
 
     def add_result(self, response: Response[TelegramType]) -> Response[TelegramType]:
         self.responses.append(response)
         return response
 
-    def get_request(self) -> Request:
+    def get_request(self) -> TelegramMethod[TelegramType]:
         return self.requests.pop()
 
     async def close(self):
         self.closed = True
 
     async def make_request(
-            self, bot: Bot, method: TelegramMethod[TelegramType], timeout: Optional[int] = UNSET
+            self,
+            bot: Bot,
+            method: TelegramMethod[TelegramType],
+            timeout: Optional[int] = UNSET_PARSE_MODE,
     ) -> TelegramType:
-        # self.closed = False
-        # self.requests.append(method.build_request(bot))
-        # response: Response[TelegramType] = self.responses.pop()
-        # self.check_response(
-        #     method=method, status_code=response.error_code, content=response.json()
-        # )
-        # return response.result  # type: ignore
-        return method
+        self.closed = False
+        self.requests.append(method)
+        response: Response[TelegramType] = self.responses.pop()
+        self.check_response(
+            bot=bot,
+            method=method,
+            status_code=response.error_code,
+            content=response.model_dump_json(),
+        )
+        return response.result  # type: ignore
 
     async def stream_content(
-            self, url: str, timeout: int, chunk_size: int
+            self,
+            url: str,
+            headers: Optional[Dict[str, Any]] = None,
+            timeout: int = 30,
+            chunk_size: int = 65536,
+            raise_for_status: bool = True,
     ) -> AsyncGenerator[bytes, None]:  # pragma: no cover
         yield b""
 
@@ -84,5 +93,5 @@ class MockedBot(Bot):
         self.session.add_result(response)
         return response
 
-    def get_request(self) -> Request:
+    def get_request(self) -> TelegramMethod[TelegramType]:
         return self.session.get_request()
