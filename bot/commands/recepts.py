@@ -1,9 +1,6 @@
-import random
-
 from aiogram import types
 from aiogram.fsm.context import FSMContext
-from aiogram.types import KeyboardButton
-from aiogram.utils.keyboard import ReplyKeyboardBuilder
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from natasha import MorphVocab, Segmenter, NewsMorphTagger, NewsEmbedding, Doc
 from sqlalchemy import select, join, desc, func, asc
 from sqlalchemy.exc import MultipleResultsFound
@@ -11,7 +8,7 @@ from sqlalchemy.orm import sessionmaker, aliased
 
 from bot.commands import StateForm
 from bot.commands.differ import get_cool_id, same_len_list
-from bot.commands.functions import show_unsub_text
+from bot.commands.functions import call_show_subscription_text, show_subscription_text, show_message
 from bot.db import Units, Ingredient, Intermediate, Recept, User
 
 another_using = 'Если Вы хотите использовать бота - выберите кнопку.'
@@ -24,8 +21,20 @@ async def recept_with_param(message: types.Message, state: FSMContext):
         )
         await state.set_state(StateForm.GET_PRODUCT)
     else:
-        await show_unsub_text(
+        await show_subscription_text(
             message=message
+        )
+
+
+async def call_recept_with_param(callback: types.CallbackQuery, state: FSMContext):
+    if User.is_sub_user:
+        await callback.message.edit_text(
+            'Напишите названия продуктов, которые у Вас есть.\nЧерез запятую.'
+        )
+        await state.set_state(StateForm.GET_PRODUCT)
+    else:
+        await call_show_subscription_text(
+            callback=callback
         )
 
 
@@ -34,16 +43,16 @@ async def users_product(
         state: FSMContext,
         session_maker: sessionmaker
 ):
+    # todo lem, tolowercase, missclics
     if User.is_sub_user:
         not_founded_ing = 'Пока что в базе отсутствует ингредиент, который Вы написали.'
         not_founded_rec = 'Пока что в базе отсутствует рецепт, состоящий Ваших из ингредиентов.'
 
-        menu_builder = ReplyKeyboardBuilder()
+        menu_builder = InlineKeyboardBuilder()
 
-        menu_builder.row(
-            KeyboardButton(
-                text='Рецепт из имеющегося'
-            )
+        menu_builder.button(
+            text='Другой рецепт 🔁',
+            callback_data='Рецепт из имеющегося'
         )
         list_ingredients = convert_in_list(message.text)
 
@@ -54,8 +63,6 @@ async def users_product(
 
         if response_ingredient_id:
             list_ing_id = convert_in_int(list_=response_ingredient_id)
-
-            print(f'\n\n\n{list_ing_id}\n\n\n')
 
             response_recept_id = await get_intermediate_recept_id(
                 session_maker=session_maker,
@@ -93,28 +100,26 @@ async def users_product(
                     recept_id=cool_id
                 )
 
-                await message.answer(
-                    get_recept_for_user(recept)
-                )
-                await message.answer(
-                    another_using,
-                    reply_markup=menu_builder.as_markup(resize_keyboard=True)
+                await show_message(
+                    message=message,
+                    text=get_recept_for_user(recept),
+                    inline_keyboard=menu_builder.as_markup()
                 )
                 await state.set_state(StateForm.GET_BUTTON)
             elif not response_recept_id:
-                await message.answer(
-                    not_founded_rec,
-                    reply_markup=menu_builder.as_markup(resize_keyboard=True)
+                await show_message(
+                    message=message,
+                    text=not_founded_rec
                 )
                 await state.set_state(StateForm.GET_PRODUCT)
         elif not response_ingredient_id:
-            await message.answer(
-                not_founded_ing,
-                reply_markup=menu_builder.as_markup(resize_keyboard=True)
+            await show_message(
+                message=message,
+                text=not_founded_ing
             )
             await state.set_state(StateForm.GET_PRODUCT)
     else:
-        await show_unsub_text(
+        await show_subscription_text(
             message=message
         )
 
@@ -183,17 +188,20 @@ async def get_ingredient_id(
 
             i = aliased(ingredients_table)
             for ingredient_name in list_ingredient_name:
-                stmt = select(i.c.ingredient_id).where(i.c.ingredient_name.contains(ingredient_name))
+                stmt = select(i.c.ingredient_id, i.c.ingredient_name).where(
+                    i.c.ingredient_name.contains(ingredient_name))
                 result = await session.execute(stmt)
                 try:
-                    ingredient = result.scalar_one_or_none()
-                    if ingredient:
-                        list_ingredient_id.append(ingredient)
+                    ingredient_id = result.scalar_one_or_none()
+                    if ingredient_id:
+                        list_ingredient_id.append(ingredient_id)
                 except MultipleResultsFound:
                     random_result = await session.execute(stmt)
-                    random_ingredient = random_result.fetchall()
-                    random_ingredient = random.choice(random_ingredient)
-                    list_ingredient_id.append(random_ingredient)
+                    list_random_ingredients_id = random_result.fetchall()
+                    for row_list_random in list_random_ingredients_id:
+                        if ingredient_name in row_list_random:
+                            random_ingredient_id = row_list_random
+                            list_ingredient_id.append(random_ingredient_id)
             return list_ingredient_id
 
 

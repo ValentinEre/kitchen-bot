@@ -1,6 +1,6 @@
 import asyncio
-import logging
 import os
+import pathlib
 
 from aiogram import Dispatcher, Bot
 from aiogram.types import BotCommand
@@ -44,8 +44,17 @@ async def main() -> None:
     await dispatcher.start_polling(bot, session_maker=session_maker)
 
 
+def set_env():
+    from dotenv import load_dotenv
+    path = pathlib.Path(__file__).parent.parent
+    dotenv_path = path.joinpath('.env')
+    if dotenv_path.exists():
+        load_dotenv(dotenv_path=dotenv_path)
+
+
 if __name__ == "__main__":
     try:
+        set_env()
         asyncio.run(main())
     except (KeyboardInterrupt, SystemExit):
         print("Bot has been stopped")
