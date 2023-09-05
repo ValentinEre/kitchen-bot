@@ -31,7 +31,7 @@ jobs:
 
       - name: Deploy
         run: |
-          cd ./bot;
+          cd bot;
           git checkout master;
           git pull;
           docker-compose --file docker-compose.yml down;
