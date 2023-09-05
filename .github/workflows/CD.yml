@@ -1,0 +1,43 @@
+name: CD
+on:
+  push:
+    branches:
+      - master
+
+env:
+  SERVER_HOST: 80.87.200.249
+  SERVER_USER: root
+  SERVER_PATH: /bot
+
+
+jobs:
+  workflow:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.11
+
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install SSH Key
+        uses: shimataro/ssh-key-action@v2.3.1
+        with:
+          key: "${{ secrets.MY_KEY }}"
+          known_hosts: "just-a-placeholder-so-we-dont-get-errors"
+
+      - name: Generate auth hosts
+        run: ssh-keyscan -H ${{ env.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - run: rsync --archive --compress --progress . ${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}:${{ env.SERVER_PATH }}
+
+      - name: checkout repo
+        uses: actions/checkout@v3
+      - name: docker-compose
+        run: docker-compose up -d
