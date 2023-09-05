@@ -4,6 +4,6 @@ WORKDIR /bot/
 # copy project
 COPY . /bot/
 # install dependencies
-RUN pip install --user aiogram, alembic, asyncpg, natasha, python-dotenv
+RUN pip install requests
 # run app
 CMD ["python", "bot.py"]
