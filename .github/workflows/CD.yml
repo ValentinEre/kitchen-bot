@@ -25,10 +25,13 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            whoami
+            ls -al
 
       - name: Deploy
         run: |
-          cd ${{secrets.SERVER_PATH}};
+          cd ./bot;
           git checkout master;
           git pull;
           docker-compose --file docker-compose.yml down;
