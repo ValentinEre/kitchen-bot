@@ -14,7 +14,7 @@ jobs:
         with:
           python-version: 3.11
       - name: echo
-        run: cd ./bot; ls -la
+        run: tree -a
   prepare-environment:
     runs-on: self-hosted
     needs: test
@@ -24,7 +24,7 @@ jobs:
       - name: Remove unused data
         run: docker system prune -a -f
       - name: echo
-        run: cd ./bot; ls -la
+        run: tree -a
   deploy:
     runs-on: self-hosted
     needs: prepare-environment
@@ -34,4 +34,4 @@ jobs:
       - name: docker-compose
         run: docker compose up -d
       - name: echo
-        run: cd ./bot; ls -la
+        run: tree -a
