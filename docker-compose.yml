@@ -8,6 +8,10 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     restart: on-failure
+    environment:
+      POSTGRES_USER: userrole
+      POSTGRES_PASSWORD: 12345
+      POSTGRES_DB: mydb
     ports:
       - '5432:5432'
   bot:
