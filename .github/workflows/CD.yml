@@ -19,7 +19,7 @@ jobs:
 
     needs: workflow
     steps:
-      - name: executing remote ssh commands using ssh key
+      - name: Executing remote ssh commands using ssh key
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -28,9 +28,7 @@ jobs:
           script: |
             whoami
             ls -al;
-            cd ./bot;
-            git checkout master;
-            git pull;
-            docker-compose --file docker-compose.yml down;
-            docker-compose --file docker-compose.yml up -d;
-            docker system prune --all --force;
+      - name: checkout repo
+        uses: actions/checkout@v3
+      - name: docker-compose
+        run: docker-compose.yml up -d
