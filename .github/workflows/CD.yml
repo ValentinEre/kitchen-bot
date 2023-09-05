@@ -27,13 +27,10 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             whoami
-            ls -al
-
-      - name: Deploy
-        run: |
-          cd bot;
-          git checkout master;
-          git pull;
-          docker-compose --file docker-compose.yml down;
-          docker-compose --file docker-compose.yml up -d;
-          docker system prune --all --force;
+            ls -al;
+            cd ./bot;
+            git checkout master;
+            git pull;
+            docker-compose --file docker-compose.yml down;
+            docker-compose --file docker-compose.yml up -d;
+            docker system prune --all --force;
