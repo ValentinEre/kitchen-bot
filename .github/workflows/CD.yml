@@ -13,8 +13,6 @@ jobs:
         uses: actions/setup-python@v3
         with:
           python-version: 3.11
-      - name: echo
-        run: tree -a
   prepare-environment:
     runs-on: self-hosted
     needs: test
@@ -22,7 +20,7 @@ jobs:
       - name: echo
         run: tree -a
       - name: Stop and remove containers, networks
-        run: docker-compose down
+        run: docker compose down
       - name: Remove unused data
         run: docker system prune -a -f
 
@@ -33,6 +31,4 @@ jobs:
       - name: checkout repo
         uses: actions/checkout@v3
       - name: docker compose
-        run: docker-compose up -d
-      - name: echo
-        run: tree -a
+        run: docker compose up -d
