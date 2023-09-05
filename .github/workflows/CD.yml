@@ -24,6 +24,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: whoami
+
 #    runs-on: ubuntu-latest
 #    needs: workflow
 #    steps:
