@@ -5,20 +5,18 @@ on:
       - master
 
 jobs:
-  workflow:
-    runs-on: ubuntu-latest
-    steps:
 
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
           python-version: 3.11
-
-  deploy:
-    runs-on: ubuntu-latest
-
-    needs: workflow
-    steps:
+          bundler-cache: true
       - name: Executing remote ssh commands using ssh key
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -28,7 +26,6 @@ jobs:
           script: |
             whoami
             ls -al;
-      - name: checkout repo
-        uses: actions/checkout@v3
+
       - name: docker-compose
-        run: docker-compose.yml up -d
+        run: docker-compose up -d
