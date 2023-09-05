@@ -31,7 +31,7 @@ jobs:
     steps:
       - name: checkout repo
         uses: actions/checkout@v3
-      - name: docker-compose
-        run: docker compose up -d
+      - name: docker compose
+        run: docker-compose up -d
       - name: echo
         run: tree -a
