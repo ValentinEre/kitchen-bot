@@ -1,4 +1,6 @@
 FROM python:3.11
-COPY requirements.txt .
+WORKDIR /app
+COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
-CMD ["python bot.py"]
+RUN chmod 755 .
+COPY . .
