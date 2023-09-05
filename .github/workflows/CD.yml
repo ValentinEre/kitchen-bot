@@ -5,10 +5,7 @@ on:
       - master
 
 env:
-  SERVER_HOST: 80.87.200.249
-  SERVER_USER: root
   SERVER_PATH: /bot
-  DATABASE_URL: "postgresql+asyncpg://userrole:12345@localhost/mydb"
 
 jobs:
   workflow:
@@ -29,9 +26,9 @@ jobs:
         with:
           host: ${{secrets.SSH_HOST}}
           user: ${{secrets.SSH_USER}}
-          private_key: ${{secrets.SSH_PRIVATE_KEY}}
+          private_key: ${{secrets.KITCHEN_BOT_SECRET}}
           command: |
-            cd ${{ secrets.PROJECT_FOLDER }};
+            cd ${{ $SERVER_PATH }};
             git checkout main;
             git pull;
             docker-compose --file docker-compose.prod.yml down;
