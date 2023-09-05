@@ -4,8 +4,6 @@ on:
     branches:
       - master
 
-env:
-  SERVER_PATH: /bot
 
 jobs:
   workflow:
@@ -28,7 +26,7 @@ jobs:
           user: ${{secrets.SSH_USER}}
           private_key: ${{secrets.KITCHEN_BOT_SECRET}}
           command: |
-            cd ${{ SERVER_PATH }};
+            cd ${{secrets.SERVER_PATH}};
             git checkout main;
             git pull;
             docker-compose --file docker-compose.prod.yml down;
