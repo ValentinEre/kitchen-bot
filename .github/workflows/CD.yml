@@ -16,6 +16,8 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
+
+    needs: workflow
     steps:
       - name: executing remote ssh commands using ssh key
         uses: appleboy/ssh-action@v1.0.0
@@ -23,23 +25,12 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: whoami
 
-#    runs-on: ubuntu-latest
-#    needs: workflow
-#    steps:
-#      - name: Create SSH key
-#        run: |
-#          mkdir -p ~/.ssh/;
-#          echo "$SSH_PRIVATE_KEY" > ../private.key;
-#          sudo chmod 600 ../private.key;
-#          echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts;
-#
-#      - name: Deploy
-#        run: |
-#          cd ${{secrets.SERVER_PATH}};
-#          git checkout master;
-#          git pull;
-#          docker-compose --file docker-compose.yml down;
-#          docker-compose --file docker-compose.yml up -d;
-#          docker system prune --all --force;
+      - name: Deploy
+        run: |
+          cd ${{secrets.SERVER_PATH}};
+          git checkout master;
+          git pull;
+          docker-compose --file docker-compose.yml down;
+          docker-compose --file docker-compose.yml up -d;
+          docker system prune --all --force;
