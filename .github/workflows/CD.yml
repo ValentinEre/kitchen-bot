@@ -25,7 +25,7 @@ jobs:
             su user;
             pwd;
             cd ${{ secrets.SERVER_PATH }};
-            git checkout main;
+            git checkout master;
             git pull;
             docker compose --file docker-compose.yml down;
             docker compose --file docker-compose.yml up -d;
