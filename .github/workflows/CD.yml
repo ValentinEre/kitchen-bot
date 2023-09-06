@@ -22,6 +22,7 @@ jobs:
           host_fingerprint: ${{secrets.USER_UBUNTU_PUBLIC_KB}}
           command: |
             su user;
+            
             pwd;
             cd ${{ secrets.SERVER_PATH }};
             git checkout main;
