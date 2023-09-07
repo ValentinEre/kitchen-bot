@@ -9,12 +9,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: checkout repo
-        uses: actions/checkout@v3
-      - name: set up Python
-        uses: actions/setup-python@v3
-        with:
-          python-version: 3.11
+
       - name: Run command on remote server
         uses: D3rHase/ssh-command-action@v0.2.2
         with:
