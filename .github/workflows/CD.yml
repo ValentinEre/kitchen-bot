@@ -18,9 +18,10 @@ jobs:
           private_key: ${{secrets.USER_UBUNTU_PRIVATE_KB}}
           command: |
             pwd;
-            cd ${{ secrets.SERVER_PATH }};
-            git checkout master;
-            git pull;
-            docker compose --file docker-compose.yml down;
-            docker compose --file docker-compose.yml up -d;
-            docker system prune --all --force;
+            whoami
+#            cd ${{ secrets.SERVER_PATH }};
+#            git checkout master;
+#            git pull;
+#            docker compose --file docker-compose.yml down;
+#            docker compose --file docker-compose.yml up -d;
+#            docker system prune --all --force;
