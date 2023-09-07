@@ -22,7 +22,6 @@ jobs:
           user: ${{secrets.SSH_USER}}
           private_key: ${{secrets.USER_UBUNTU_PRIVATE_KB}}
           command: |
-            su user;
             pwd;
             cd ${{ secrets.SERVER_PATH }};
             git checkout master;
