@@ -20,7 +20,7 @@ jobs:
         with:
           host: ${{secrets.SSH_HOST}}
           user: ${{secrets.SSH_USER}}
-          private_key: ${{secrets.USER_UBUNTU_PRIVATE_KB_ED}}
+          private_key: ${{secrets.USER_UBUNTU_PRIVATE_KB}}
           command: |
             su user;
             pwd;
