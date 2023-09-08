@@ -17,11 +17,10 @@ jobs:
           user: ${{secrets.SSH_USER}}
           private_key: ${{secrets.USER_UBUNTU_PRIVATE_KB}}
           command: |
-            pwd;
+            
             whoami;
-
-
-#            cd ${{ secrets.SERVER_PATH }};
+            cd ${{ secrets.SERVER_PATH }};
+            pwd;
 #            git checkout master;
 #            git pull;
 #            docker compose --file docker-compose.yml down;
