@@ -20,6 +20,7 @@ jobs:
             pwd;
             whoami;
 
+
 #            cd ${{ secrets.SERVER_PATH }};
 #            git checkout master;
 #            git pull;
