@@ -20,7 +20,6 @@ jobs:
             cd ${{ secrets.SERVER_PATH }};
             git pull git@github.com:ValentinEre/kitchen-bot.git;
 
-
 #            docker compose --file docker-compose.yml down;
 #            docker compose --file docker-compose.yml up -d;
 #            docker system prune --all --force;
