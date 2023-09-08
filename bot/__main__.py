@@ -6,12 +6,12 @@ from aiogram import Dispatcher, Bot
 from aiogram.types import BotCommand
 from sqlalchemy import URL
 
+from bot.commands import register_user_commands
 from bot.commands import bot_commands
 from bot.db import create_async_engine
 from bot.db.engine import get_session_maker
 from bot.middleware.register import RegisterCheck
 from bot.middleware.subscribe_check import SubscribeCheck
-from commands import register_user_commands
 
 
 async def start_bot() -> None:
