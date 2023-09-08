@@ -14,7 +14,7 @@ from bot.middleware.subscribe_check import SubscribeCheck
 from commands import register_user_commands
 
 
-async def main() -> None:
+async def start_bot() -> None:
     commands_for_bot = []
     for cmd in bot_commands:
         commands_for_bot.append(BotCommand(command=cmd[0], description=cmd[1]))
@@ -52,9 +52,13 @@ def set_env():
         load_dotenv(dotenv_path=dotenv_path)
 
 
-if __name__ == "__main__":
+def main():
     try:
         set_env()
-        asyncio.run(main())
+        asyncio.run(start_bot())
     except (KeyboardInterrupt, SystemExit):
         print("Bot has been stopped")
+
+
+if __name__ == "__main__":
+    main()
