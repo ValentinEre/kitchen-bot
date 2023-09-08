@@ -18,7 +18,7 @@ jobs:
           private_key: ${{secrets.USER_UBUNTU_PRIVATE_KB}}
           command: |
             pwd;
-            whoami
+            whoami;
 #            cd ${{ secrets.SERVER_PATH }};
 #            git checkout master;
 #            git pull;
