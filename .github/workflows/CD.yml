@@ -17,13 +17,9 @@ jobs:
           user: ${{secrets.SSH_USER}}
           private_key: ${{secrets.USER_UBUNTU_PRIVATE_KB}}
           command: |
-            
-            whoami;
             cd ${{ secrets.SERVER_PATH }};
-            pwd;
-            git --version;
-#            git checkout master;
-#            git pull;
-#            docker compose --file docker-compose.yml down;
-#            docker compose --file docker-compose.yml up -d;
-#            docker system prune --all --force;
+            git checkout master;
+            git pull;
+            docker compose --file docker-compose.yml down;
+            docker compose --file docker-compose.yml up -d;
+            docker system prune --all --force;
