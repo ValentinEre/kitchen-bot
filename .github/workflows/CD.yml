@@ -21,6 +21,7 @@ jobs:
             whoami;
             cd ${{ secrets.SERVER_PATH }};
             pwd;
+            git --version;
 #            git checkout master;
 #            git pull;
 #            docker compose --file docker-compose.yml down;
