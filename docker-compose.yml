@@ -14,7 +14,7 @@ services:
       POSTGRES_PASSWORD: 12345
       POSTGRES_DB: mydb
     ports:
-      - '80.87.200.249:5433:5433'
+      - '80.87.200.249:5432:5432'
   bot:
     build: .
     command: sh -c "make migrate && python -m bot"
