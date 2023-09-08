@@ -6,7 +6,7 @@ from aiogram import Dispatcher, Bot
 from aiogram.types import BotCommand
 from sqlalchemy import URL
 
-from bot.commands.bot_commands import bot_commands
+from bot.commands import bot_commands
 from bot.db import create_async_engine
 from bot.db.engine import get_session_maker
 from bot.middleware.register import RegisterCheck

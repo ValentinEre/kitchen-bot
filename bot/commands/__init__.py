@@ -2,6 +2,7 @@ __all__ = ['register_user_commands', 'bot_commands', 'StateForm', 'SubscribeChec
 
 from aiogram import Router, F
 from aiogram.filters import Command, CommandStart
+from bot.commands.bot_commands import bot_commands
 from bot.commands.stateform import StateForm
 from bot.commands.help import help_command
 from bot.commands.recepts import recept_with_param, users_product, call_recept_with_param
