@@ -10,9 +10,9 @@ services:
       - pgdata:/var/lib/postgresql/data
     restart: on-failure
     environment:
-      PGUSER: userrole
-      PGPASSWORD: 12345
-      PGDATABASE: mydb
+      POSTGRES_DB: mydb
+      POSTGRES_USER: userrole
+      POSTGRES_PASSWORD: 12345
     ports:
       - '80.87.200.249:5432:5432'
   bot:
