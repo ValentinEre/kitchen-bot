@@ -1,3 +1,5 @@
+import random
+
 from aiogram import types
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -50,7 +52,7 @@ async def users_product(
         menu_builder = InlineKeyboardBuilder()
 
         menu_builder.button(
-            text='Другой рецепт 🔁',
+            text='Ещё рецепт 🔁',
             callback_data='Рецепт из имеющегося'
         )
         list_ingredients = convert_in_list(message.text)
@@ -61,6 +63,8 @@ async def users_product(
         )
 
         if response_ingredient_id:
+            # переделка листов в объекты
+            # object_list = to_obj(response_ingredient_id)
             list_ing_id = convert_in_int(list_=response_ingredient_id)
 
             response_recept_id = await get_intermediate_recept_id(
@@ -138,6 +142,23 @@ def convert_in_int(list_):
     return my_list
 
 
+# def to_obj(response_ingredient_id):
+#     my_ingredients = []
+#     for ingredient_id in response_ingredient_id:
+#
+#         if type(ingredient_id) is list:
+#             for ing in ingredient_id:
+#                 my_ingredients.append(ing)
+#         else:
+#             my_ingredients.append(ingredient_id)
+#
+#         recept = ReceptClass(
+#             # title=,
+#             ingredient_list=my_ingredients,
+#             # preparation=
+#         )
+
+
 def convert_in_list(text: str):
     data = text.split(",")
     ingredient_list = []
@@ -188,8 +209,8 @@ async def get_ingredient_id(
 
             i = aliased(ingredients_table)
             for ingredient_name in list_ingredient_name:
-                stmt = select(i.c.ingredient_id, i.c.ingredient_name).where(
-                    i.c.ingredient_name.contains(ingredient_name))
+                stmt = select(i.c.ingredient_id).where(
+                    i.c.ingredient_name.match(ingredient_name))
                 result = await session.execute(stmt)
                 try:
                     ingredient_id = result.scalar_one_or_none()
@@ -202,6 +223,9 @@ async def get_ingredient_id(
                         if ingredient_name in row_list_random:
                             random_ingredient_id = row_list_random
                             list_ingredient_id.append(random_ingredient_id)
+                        else:
+                            r_i = random.choice(list_random_ingredients_id)
+                            list_ingredient_id.append(r_i)
             return list_ingredient_id
 
 
