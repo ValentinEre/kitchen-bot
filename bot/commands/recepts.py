@@ -219,14 +219,9 @@ async def get_ingredient_id(
                 except MultipleResultsFound:
                     random_result = await session.execute(stmt)
                     list_random_ingredients_id = random_result.fetchall()
-                    for row_list_random in list_random_ingredients_id:
-                        if ingredient_name in row_list_random:
-                            random_ingredient_id = row_list_random
-                            list_ingredient_id.append(random_ingredient_id)
-                        else:
-                            r_i = random.choice(list_random_ingredients_id)
-                            list_ingredient_id.append(r_i)
-            return list_ingredient_id
+                    r_i = random.choice(list_random_ingredients_id)
+                    list_ingredient_id.append(r_i)
+        return list_ingredient_id
 
 
 async def get_intermediate_recept_id(session_maker: sessionmaker, list_ingredient_id):
