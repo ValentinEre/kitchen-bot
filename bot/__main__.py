@@ -32,11 +32,11 @@ async def start_bot() -> None:
 
     postgres_url = URL.create(
         "postgresql+asyncpg",
-        username=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASS"),
-        host=os.getenv("DB_HOST"),
-        database=os.getenv("DB_NAME"),
-        port=os.getenv("DB_PORT")
+        username=os.getenv("POSTGRES_USER"),
+        password=os.getenv("POSTGRES_PASSWORD"),
+        host=os.getenv("POSTGRES_HOST"),
+        database=os.getenv("POSTGRES_DB"),
+        port=os.getenv("POSTGRES_PORT")
     )
     async_engine = create_async_engine(postgres_url)
     session_maker = get_session_maker(async_engine)
