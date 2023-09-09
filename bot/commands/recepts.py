@@ -144,7 +144,7 @@ def convert_in_list(text: str):
     for ingredient in data:
         ingredient_list.append(ingredient.lower().strip())
 
-    return my_lemma(ingredient_list)
+    return ingredient_list
 
 
 def get_recept_for_user(response_full_recept):
