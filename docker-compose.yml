@@ -2,6 +2,14 @@ version: '3.11'
 
 services:
 
+  redis:
+    image: redis:7.2.1
+    env_file:
+      - ./.env
+    restart: on-failure
+    ports:
+      - "6379:6379"
+
   postgres:
     image: postgres:15.1
     env_file:
@@ -23,6 +31,7 @@ services:
     restart: always
     depends_on:
       - postgres
+      - redis
 
 volumes:
   pgdata:
