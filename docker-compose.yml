@@ -1,7 +1,6 @@
 version: '3.11'
 
 services:
-
   redis:
     image: redis:7.2.1
     env_file:
@@ -16,7 +15,7 @@ services:
     ports:
       - ${REDIS_PORT}:${REDIS_PORT}
     volumes:
-      - /usr/src/app/data:/bitnami/redis/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
 
   postgres:
     image: postgres:15.1
