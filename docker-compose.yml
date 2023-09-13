@@ -8,7 +8,7 @@ services:
       - ./.env
     restart: on-failure
     ports:
-      - "6379:6379"
+      - "80.87.200.249:6379:6379"
 
   postgres:
     image: postgres:15.1
