@@ -1,11 +1,11 @@
 import datetime
 
 from aiogram import Bot
+from aioredis import Redis
 from sqlalchemy import Column, VARCHAR, DATE, select, BIGINT
 from sqlalchemy.orm import sessionmaker
 
 from .base import BaseModel
-from ..misc import redis
 
 
 class User(BaseModel):
@@ -23,7 +23,7 @@ class User(BaseModel):
     user_last_date = Column(DATE, onupdate=datetime.date.today())
 
 
-async def is_user_exists(user_id: int, session_maker: sessionmaker) -> bool:
+async def is_user_exists(user_id: int, session_maker: sessionmaker, redis: Redis) -> bool:
     res = await redis.get(name='is_user_exists:' + str(user_id))
     if not res:
         async with session_maker() as session:
