@@ -7,10 +7,10 @@ services:
     env_file:
       - ./.env
     restart: on-failure
+    command:
+      - redis-server
     ports:
       - ${REDIS_PORT}:${REDIS_PORT}
-    expose:
-      - ${REDIS_PORT}
     volumes:
       - /usr/src/app/data:/bitnami/redis/data
 

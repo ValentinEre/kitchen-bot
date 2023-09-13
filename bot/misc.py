@@ -1,3 +1,3 @@
-from aiogram.fsm.storage.redis import RedisStorage
+from aioredis import Redis
 
-redis = RedisStorage.from_url('redis://localhost:6379/0')
+redis = Redis()
