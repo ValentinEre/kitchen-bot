@@ -6,9 +6,13 @@ services:
     image: redis:7.2.1
     env_file:
       - ./.env
-    restart: on-failure
+    restart: always
     command:
       - redis-server
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_PORT=6379
+      - REDIS_DATABASES=16
     ports:
       - ${REDIS_PORT}:${REDIS_PORT}
     volumes:
