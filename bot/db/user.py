@@ -5,6 +5,7 @@ from sqlalchemy import Column, VARCHAR, DATE, select, BIGINT
 from sqlalchemy.orm import sessionmaker
 
 from .base import BaseModel
+from ..misc import redis
 
 
 class User(BaseModel):
@@ -23,13 +24,15 @@ class User(BaseModel):
 
 
 async def is_user_exists(user_id: int, session_maker: sessionmaker) -> bool:
-    async with session_maker() as session:
-        async with session.begin():
-            sql_res = await session.execute(
-                select(User).where(User.user_id == user_id)
-            )
-            result = sql_res.first()
-            return bool(result)
+    res = await redis.get(name='is_user_exists:' + str(user_id))
+    if not res:
+        async with session_maker() as session:
+            async with session.begin():
+                sql_res = await session.execute(select(User).where(User.user_id == user_id))
+                await redis.set(name='is_user_exists:' + str(user_id), value=1 if sql_res else 0)
+                return bool(sql_res)
+    else:
+        return bool(res)
 
 
 async def create_user(
