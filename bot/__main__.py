@@ -43,7 +43,7 @@ async def start_bot() -> None:
     async_engine = create_async_engine(postgres_url)
     session_maker = get_session_maker(async_engine)
 
-    await dispatcher.start_polling(bot, session_maker=session_maker)
+    await dispatcher.start_polling(bot, session_maker=session_maker, redis=redis)
 
 
 def set_env():
