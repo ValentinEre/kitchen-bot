@@ -6,7 +6,7 @@ services:
     build:
       dockerfile: redis.dockerfile
     env_file:
-      - .env
+      - ./.env
     restart: on-failure
     ports:
       - "6378:6378"
@@ -16,7 +16,7 @@ services:
   postgres:
     image: postgres:15.1
     env_file:
-      - .env
+      - ./.env
     volumes:
       - pgdata:/var/lib/postgresql/data
     restart: on-failure
@@ -30,7 +30,7 @@ services:
     build:
       dockerfile: Dockerfile
     env_file:
-      - .env
+      - ./.env
     restart: always
     command: sh -c "make migrate && python -m bot"
     depends_on:
