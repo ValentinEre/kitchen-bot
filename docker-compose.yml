@@ -3,25 +3,21 @@ version: '3.11'
 services:
 
   redis:
-    image: redis:7.2.1
+    build:
+      context: buildfiles
+      dockerfile: redis.dockerfile
     env_file:
-      - ./.env
-    restart: always
-    command:
-      - redis-server
-    environment:
-      - ALLOW_EMPTY_PASSWORD=yes
-      - REDIS_PORT=6379
-      - REDIS_DATABASES=16
+      - .env
+    restart: on-failure
     ports:
-      - ${REDIS_PORT}:${REDIS_PORT}
+      - "6378:6378"
     volumes:
       - ./redis.conf:/usr/local/etc/redis/redis.conf
 
   postgres:
     image: postgres:15.1
     env_file:
-      - ./.env
+      - .env
     volumes:
       - pgdata:/var/lib/postgresql/data
     restart: on-failure
@@ -30,10 +26,11 @@ services:
       POSTGRES_USER: userrole
       POSTGRES_PASSWORD: 12345
     ports:
-      - '80.87.200.249:5432:5432'
+      - '5432:5432'
   bot:
-    build: .
-    command: sh -c "make migrate && python -m bot"
+    build:
+      context: .
+      dockerfile: buildfiles/Dockerfile
     env_file:
       - ./.env
     restart: always
