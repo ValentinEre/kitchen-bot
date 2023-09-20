@@ -1,3 +1,3 @@
-from redis import Redis
+from aioredis import Redis
 
 redis = Redis()
