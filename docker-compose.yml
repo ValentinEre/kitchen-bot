@@ -33,7 +33,7 @@ services:
     env_file:
       - ./.env
     restart: always
-    command: sh -c "make migrate"
+    command: bash -c "make migrate"
     depends_on:
       - postgres
       - redis
