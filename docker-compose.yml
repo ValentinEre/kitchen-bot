@@ -28,7 +28,7 @@ services:
   bot:
     build:
       context: buildfiles
-      dockerfile: .
+      dockerfile: Dockerfile
     env_file:
       - ./.env
     restart: always
