@@ -25,6 +25,7 @@ services:
       POSTGRES_PASSWORD: 12345
     ports:
       - '5432:5432'
+
   bot:
     build:
 #      context: buildfiles
