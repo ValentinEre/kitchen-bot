@@ -28,12 +28,11 @@ services:
 
   bot:
     build:
-#      context: buildfiles
       dockerfile: Dockerfile
     env_file:
       - ./.env
     restart: always
-    command: bash -c "make migrate"
+    command: make migrate
     depends_on:
       - postgres
       - redis
