@@ -4,7 +4,8 @@ services:
 
   redis:
     build:
-      dockerfile: redis.dockerfile
+      context: buildfiles
+      dockerfile: buildfiles/redis.dockerfile
     env_file:
       - ./.env
     restart: on-failure
@@ -28,6 +29,7 @@ services:
       - '5432:5432'
   bot:
     build:
+      context: buildfiles
       dockerfile: .
     env_file:
       - ./.env
