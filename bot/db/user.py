@@ -13,13 +13,9 @@ class User(BaseModel):
 
     is_sub_user: bool = False
 
-    # id from telegram
     user_id = Column(BIGINT, primary_key=True, unique=True, nullable=False)
-    # username from telegram
     user_name = Column(VARCHAR(32), unique=False, nullable=True)
-    # first reg date
     user_date = Column(DATE, default=datetime.date.today())
-    # last visit
     user_last_date = Column(DATE, onupdate=datetime.date.today())
 
 
