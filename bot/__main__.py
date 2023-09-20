@@ -21,7 +21,6 @@ async def start_bot() -> None:
     for cmd in bot_commands:
         commands_for_bot.append(BotCommand(command=cmd[0], description=cmd[1]))
 
-    # logging.basicConfig(level=logging.DEBUG)
     token = os.getenv("TELEGRAM_API_KITCHEN")
 
     dispatcher = Dispatcher(storage=RedisStorage(redis=redis))
