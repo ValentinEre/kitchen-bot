@@ -32,7 +32,7 @@ services:
     env_file:
       - ./.env
     restart: always
-    command: sh -c "make migrate && python -m bot"
+    command: sh -c "make migrate"
     depends_on:
       - postgres
       - redis
