@@ -27,8 +27,7 @@ services:
       - '5432:5432'
   bot:
     build:
-      context: buildfiles
-      dockerfile: Dockerfile
+      dockerfile: .
     env_file:
       - ./.env
     restart: always
