@@ -27,7 +27,7 @@ services:
       - '5432:5432'
   bot:
     build:
-      context: buildfiles
+#      context: buildfiles
       dockerfile: Dockerfile
     env_file:
       - ./.env
