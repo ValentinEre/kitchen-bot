@@ -1,7 +1,7 @@
 import datetime
 
 from aiogram import Bot
-from redis import Redis
+from redis.asyncio import Redis
 from sqlalchemy import Column, VARCHAR, DATE, select, BIGINT
 from sqlalchemy.orm import sessionmaker
 

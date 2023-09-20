@@ -8,3 +8,4 @@ requests~=2.31.0
 beautifulsoup4~=4.12.2
 pytest==7.4.2
 redis>=4.2.0rc1
+hiredis==2.2.3
