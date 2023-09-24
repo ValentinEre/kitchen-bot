@@ -212,15 +212,11 @@ async def get_ingredient_id(
                 stmt = select(i.c.ingredient_id).where(
                     i.c.ingredient_name.match(ingredient_name))
                 result = await session.execute(stmt)
-                try:
-                    ingredient_id = result.scalar_one_or_none()
-                    if ingredient_id:
-                        list_ingredient_id.append(ingredient_id)
-                except MultipleResultsFound:
-                    random_result = await session.execute(stmt)
-                    list_random_ingredients_id = random_result.fetchall()
-                    r_i = random.choice(list_random_ingredients_id)
-                    list_ingredient_id.append(r_i)
+
+                ingredient_id = result.first()
+                if ingredient_id:
+                    list_ingredient_id.append(ingredient_id)
+
         return list_ingredient_id
 
 
