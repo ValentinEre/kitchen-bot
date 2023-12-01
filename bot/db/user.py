@@ -56,3 +56,8 @@ async def is_sub_user(bot: Bot, user_id):
         return True
     elif chat_member.status in bad_status:
         return False
+
+
+async def sum(num_from_user):
+    sum = num_from_user + 1
+    return sum
